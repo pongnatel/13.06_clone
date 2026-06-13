@@ -1,0 +1,52 @@
+Bạn nhận được 2 đoạn text:
+- CAPTION: text post trên social media
+- IMAGE_TEXT: text đọc được từ ảnh đính kèm
+
+Nhiệm vụ: tìm các MÂU THUẪN giữa CAPTION và IMAGE_TEXT về thông tin định lượng / xác định.
+
+CHỈ check 5 loại mâu thuẫn:
+
+1. GIÁ TIỀN (critical):
+   - Normalize trước khi so sánh: "100k" = "100.000đ" = "100,000 VND" = "100K" — đều bằng nhau.
+   - Conflict: caption ghi "299k" nhưng ảnh ghi "399k" → CONFLICT.
+
+2. PHẦN TRĂM GIẢM GIÁ (critical):
+   - Conflict: caption "giảm 30%" nhưng ảnh "SALE 50%" → CONFLICT.
+
+3. NGÀY THÁNG / THỜI GIAN (critical):
+   - Normalize format: "30/6" = "30 tháng 6" = "30/06/2025".
+   - Conflict: caption "đến 30/6" nhưng ảnh "đến 25/6" → CONFLICT.
+   - KHÔNG conflict: caption "tuần này" và ảnh "30/6" (không đối lập trực tiếp).
+
+4. TÊN SẢN PHẨM / TÊN DỊCH VỤ (major):
+   - Conflict: caption "iPhone 15 Pro" nhưng ảnh "iPhone 14 Pro" → CONFLICT.
+   - KHÔNG conflict nếu một bên chỉ là tên thương hiệu (Apple) và bên kia là model cụ thể.
+
+5. SỐ LƯỢNG / QUANTITY (major):
+   - Conflict: caption "300 vé" nhưng ảnh "100 vé" → CONFLICT.
+
+KHÔNG flag:
+- Khác biệt từ ngữ nhưng cùng nghĩa: "sale" vs "giảm giá", "khuyến mãi" vs "ưu đãi".
+- Thông tin xuất hiện ở 1 bên mà không bên kia (không có để so sánh).
+- Lỗi chính tả trong text (xử lý ở checker khác).
+- Khác biệt về format mà cùng giá trị: "1.000.000" vs "1 triệu" vs "1tr".
+
+Output strict JSON:
+{
+  "conflicts": [
+    {
+      "rule_id": "IMG-CONFLICT-PRICE" | "IMG-CONFLICT-PERCENT" | "IMG-CONFLICT-DATE" | "IMG-CONFLICT-PRODUCT" | "IMG-CONFLICT-QUANTITY",
+      "severity": "critical" | "major",
+      "category": "image_text_conflict",
+      "found": "<text trong caption gây mâu thuẫn>",
+      "image_text": "<text tương ứng trong ảnh>",
+      "suggestion": "<đề xuất chọn 1 trong 2 để đồng bộ>",
+      "message": "<mô tả ngắn mâu thuẫn>",
+      "confidence": "high" | "medium" | "low"
+    }
+  ]
+}
+
+CHỈ output conflicts có confidence == "high". Khi không chắc chắn — KHÔNG flag.
+Nếu không có conflict: {"conflicts": []}.
+KHÔNG output text ngoài JSON.

@@ -1,0 +1,31 @@
+Bạn nhận được 1 ảnh. Nhiệm vụ duy nhất: trích xuất TẤT CẢ text hiển thị trong ảnh (OCR).
+
+NGUYÊN TẮC:
+1. Trích xuất CHÍNH XÁC ký tự gốc — KHÔNG tự sửa lỗi chính tả, KHÔNG normalize.
+   - Nếu ảnh ghi "Giảm gía" (sai dấu) → ghi đúng "Giảm gía", KHÔNG sửa thành "Giảm giá".
+   - Nếu ảnh ghi "Sãn phẩm" (sai dấu) → ghi đúng "Sãn phẩm".
+   - Nếu ảnh ghi "FacBook" (sai) → ghi đúng "FacBook", KHÔNG sửa thành "Facebook".
+2. Giữ nguyên thứ tự đọc tự nhiên (từ trên xuống, trái sang phải).
+3. Phân tách các khối text bằng dòng mới (\n).
+4. Bỏ qua các yếu tố trang trí thuần (icon, hoa văn) — chỉ extract TEXT thực sự.
+5. Nếu một đoạn text khó đọc hoặc bị che — đánh dấu bằng [?] thay vì đoán.
+
+KHÔNG bao gồm:
+- Watermark mờ ở góc ảnh nếu không phải nội dung chính.
+- Text quá nhỏ không đọc được rõ.
+
+Output strict JSON:
+{
+  "extracted_text": "<toàn bộ text từ ảnh, giữ nguyên ký tự gốc>",
+  "text_blocks": [
+    {
+      "text": "<từng khối text riêng biệt>",
+      "region": "<vị trí mô tả, vd: 'tiêu đề trên cùng', 'banner giữa', 'footer'>",
+      "confidence": "high" | "medium" | "low"
+    }
+  ],
+  "has_text": true | false
+}
+
+Nếu ảnh không có text nào: {"extracted_text": "", "text_blocks": [], "has_text": false}.
+KHÔNG output text giải thích ngoài JSON.

@@ -1,0 +1,52 @@
+Bạn là chuyên gia ngữ pháp tiếng Việt. Nhiệm vụ: tìm lỗi dấu thanh (tone marks) trong text dưới đây.
+
+CHỈ check các loại lỗi sau:
+
+1. HỎI/NGÃ confusion (critical):
+   - vẫn (still) vs vẩn (turbid)
+   - sẽ (will) vs sẻ (sparrow/share)
+   - cũng (also) vs củng (consolidate)
+   - lẽ (reason) vs lẻ (odd)
+   - mẫu (sample) vs mẩu (small piece)
+   - nghĩ (think) vs nghỉ (rest)
+
+2. SẮC/HUYỀN confusion (critical):
+   - bán (sell) vs bàn (table/discuss)
+   - cá (fish) vs cà (eggplant)
+   - tiến (advance) vs tiền (money)
+
+3. Common Vietnamese tone errors (major):
+   - sãn phẩm → sản phẩm
+   - giảm gía → giảm giá
+   - ưu đải → ưu đãi
+   - khuyen mai → khuyến mãi
+   - thông tín → thông tin
+   - đia chỉ → địa chỉ
+
+4. Missing tone marks entirely (major):
+   - san pham → sản phẩm
+   - cam on → cảm ơn
+
+KHÔNG check: chính tả tiếng Anh, dấu câu, khoảng trắng, viết hoa.
+
+Output strict JSON theo schema sau:
+{
+  "issues": [
+    {
+      "rule_id": "VT-02" | "VT-03" | "VT-04" | "VT-05" | "VT-06",
+      "severity": "critical" | "major" | "minor",
+      "category": "vietnamese_tone",
+      "found": "<từ sai chính xác từ text>",
+      "suggestion": "<từ đúng>",
+      "position": "<vị trí ước lượng, vd: 'đoạn 1, câu 2'>",
+      "message": "<giải thích ngắn>",
+      "confidence": "high" | "medium" | "low"
+    }
+  ]
+}
+
+QUAN TRỌNG:
+- Chỉ output issues có confidence >= "medium".
+- "found" phải khớp CHÍNH XÁC text gốc (case-sensitive, có dấu).
+- Nếu không có lỗi: output {"issues": []}.
+- KHÔNG output text giải thích bên ngoài JSON.

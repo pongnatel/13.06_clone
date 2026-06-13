@@ -6,7 +6,7 @@
   },
   "deploy": {
     "root": "content-quality-checker",
-    "startCommand": "streamlit run app.py --server.port 8000 --server.address 0.0.0.0",
+    "startCommand": "bash start.sh",
     "restartPolicyType": "ON_FAILURE"
   }
 }

@@ -1,57 +1,62 @@
 import uvicorn
-from fastapi import FastAPI
-from fastapi.responses import HTMLResponse
+from fastapi import FastAPI, Request
+from fastapi.responses import HTMLResponse, StreamingResponse
 import subprocess
 import os
 import sys
 import time
+import httpx
 
 app = FastAPI()
 
+# 1. Tự động kích hoạt Streamlit chạy ngầm ở cổng nội bộ 8501 khi Uvicorn vừa bật
 @app.on_event("startup")
-def start_streamlit_backend():
-    # Ép Streamlit chạy ở cổng phụ 8501 ngay khi Uvicorn vừa bật
-    print("🚀 [System] Khởi động giao diện Streamlit ở cổng phụ 8501...")
+def start_streamlit_inside():
+    print("🚀 [System] Khởi động âm thầm Streamlit ở cổng nội bộ 8501...")
     subprocess.Popen([
         sys.executable, "-m", "streamlit", "run", "app.py", 
         "--server.port", "8501", 
-        "--server.address", "0.0.0.0",
-        "--server.headless", "true"
+        "--server.address", "127.0.0.1",
+        "--server.headless", "true",
+        "--server.enableCORS", "false",
+        "--server.enableXsrfProtection", "false"
     ], cwd="content-quality-checker")
 
-@app.get("/", response_class=HTMLResponse)
-def read_root():
-    # Khi người dùng truy cập vào trang chủ cổng 8000, thay vì báo 404, 
-    # Ta trả về một giao diện HTML siêu đẹp cấu hình sẵn nút bấm hướng về cổng 8501 
-    # Hoặc hiển thị trực tiếp một thông báo điều hướng sạch sẽ.
-    return """
-    <html>
-        <head>
-            <title>VNG Content Quality Checker</title>
-            <meta http-equiv="refresh" content="0; url=http://localhost:8501" />
-            <style>
-                body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; text-align: center; padding-top: 100px; background-color: #f4f7f6; color: #333; }
-                .card { background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); display: inline-block; max-width: 500px; }
-                h1 { color: #007bff; margin-bottom: 10px; }
-                p { color: #666; margin-bottom: 25px; }
-                .btn { background: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block; transition: 0.2s; }
-                .btn:hover { background: #0056b3; }
-            </style>
-        </head>
-        <body>
-            <div class="card">
-                <h1>📝 VNG Content Quality Checker</h1>
-                <p>Hệ thống đang chuyển hướng bạn sang giao diện kiểm duyệt tương tác...</p>
-                <a class="btn" href="/streamlit">BẤM VÀO ĐÂY ĐỂ VÀO TOOL</a>
-            </div>
-        </body>
-    </html>
-    """
-
-# Giữ nguyên hàm API cũ để giao diện gọi xuống không bị lỗi
-@app.post("/check")
-def check_content():
-    return {"output": "AI Agent đã sẵn sàng đối chiếu quy chuẩn thương hiệu!"}
+# 2. Tuyệt chiêu Reverse Proxy: Hứng bất kỳ luồng truy cập nào vào cổng 8000 
+# rồi bốc dữ liệu từ Streamlit (8501) trả về cho trình duyệt
+@app.api_route("/{path:path}", methods=["GET", "POST", "PUT", "DELETE"])
+async def proxy_to_streamlit(request: Request, path: str):
+    streamlit_url = f"http://127.0.0.1:8501/{path}"
+    
+    # Lấy query parameters nếu có
+    query_params = request.url.query
+    if query_params:
+        streamlit_url += f"?{query_params}"
+        
+    async with httpx.AsyncClient() as client:
+        # Bốc dữ liệu từ Streamlit
+        req_headers = dict(request.headers)
+        # Xóa host cũ để tránh lặp vòng gửi nhận
+        req_headers.pop("host", None) 
+        
+        # Đọc body nếu có (dành cho POST request)
+        req_content = await request.body()
+        
+        # Gửi ngược về Streamlit nội bộ
+        res = await client.request(
+            method=request.method,
+            url=streamlit_url,
+            headers=req_headers,
+            content=req_content,
+            timeout=60.0
+        )
+        
+        # Trả kết quả về cho người dùng qua cổng 8000 công cộng
+        return StreamingResponse(
+            res.iter_bytes(),
+            status_code=res.status_code,
+            headers=dict(res.headers)
+        )
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

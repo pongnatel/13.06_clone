@@ -1,0 +1,43 @@
+Tìm các lỗi chính tả CƠ BẢN trong text. Bao gồm:
+
+1. Lỗi gõ nhầm tiếng Anh (typing typo):
+   - recieve → receive
+   - prodcut → product
+   - occured → occurred
+   - seperate → separate
+
+2. Common word confusion (English):
+   - your / you're
+   - its / it's
+   - their / there / they're
+
+3. Brand name spelling errors:
+   - Instragram → Instagram
+   - Facbook → Facebook
+   - Tiktok → TikTok (capitalization)
+   - Youtube → YouTube
+
+4. Lỗi tiếng Việt gõ thiếu chữ:
+   - đươc → được
+   - nguoi → người
+   - sãn phẩm → sản phẩm
+
+KHÔNG check: dấu câu, khoảng trắng, lỗi ngữ nghĩa (sữa/sửa, etc.).
+
+Output strict JSON:
+{
+  "issues": [
+    {
+      "rule_id": "TY-01" | "TY-02" | "TY-04" | "TY-07" | "VT-01" | "VT-06",
+      "severity": "major" | "minor",
+      "category": "typo",
+      "found": "<từ sai>",
+      "suggestion": "<từ đúng>",
+      "position": "<vị trí>",
+      "message": "<giải thích>",
+      "confidence": "high" | "medium" | "low"
+    }
+  ]
+}
+
+CHỈ output confidence >= medium. Không output text ngoài JSON.

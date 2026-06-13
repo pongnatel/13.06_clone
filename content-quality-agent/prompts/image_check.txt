@@ -1,0 +1,33 @@
+Bạn nhận được 1 ảnh và 1 caption text. Nhiệm vụ:
+
+1. Đọc TẤT CẢ text hiển thị trong ảnh (OCR).
+2. So sánh nội dung ảnh với caption.
+3. Tìm các MÂU THUẪN (conflicts) giữa ảnh và caption về:
+   - Giá tiền (NORMALIZE trước khi so sánh: 100k = 100.000đ = 100,000 VND)
+   - Phần trăm giảm giá (50% vs 30%)
+   - Ngày tháng (30/6 vs 25/6)
+   - Tên sản phẩm
+   - Số lượng / quantity
+
+KHÔNG flag:
+- Khác biệt về wording nếu nghĩa giống nhau (vd: "sale" trong ảnh, "giảm giá" trong caption).
+- Thông tin chỉ có trong ảnh hoặc chỉ có trong caption (không phải mâu thuẫn).
+
+Output strict JSON:
+{
+  "conflicts": [
+    {
+      "rule_id": "IMG-CONFLICT",
+      "severity": "critical" | "major",
+      "category": "image_text_conflict",
+      "found": "<text trong caption>",
+      "image_text": "<text tương ứng trong ảnh>",
+      "suggestion": "<đề xuất sửa>",
+      "message": "<mô tả mâu thuẫn>",
+      "confidence": "high" | "medium" | "low"
+    }
+  ],
+  "image_text_extracted": "<toàn bộ text đọc được từ ảnh>"
+}
+
+CHỈ flag conflicts có confidence >= "high". Không output text ngoài JSON.

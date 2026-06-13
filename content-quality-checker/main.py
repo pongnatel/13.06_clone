@@ -6,7 +6,7 @@ import sys
 
 app = FastAPI()
 
-# Nạp trực tiếp kỹ năng kiểm duyệt từ file agent của bạn vào FastAPI
+# Nạp trực tiếp kỹ năng kiểm duyệt từ file agent
 print("📝 [System] Đang nạp bộ quy chuẩn thương hiệu và initialized các model AI...")
 try:
     sys.path.append(os.path.abspath(os.path.dirname(__file__)))
@@ -17,8 +17,6 @@ except Exception as e:
 
 @app.get("/", response_class=HTMLResponse)
 def get_interactive_tool():
-    # Trả về giao diện kiểm duyệt tương tác viết bằng HTML/CSS siêu đẹp và mượt mà, 
-    # Thay thế hoàn toàn cho giao diện Streamlit bị Railway chặn cổng, giao diện này gọi trực tiếp vào API gốc!
     return """
     <!DOCTYPE html>
     <html lang="vi">
@@ -89,14 +87,12 @@ def get_interactive_tool():
     </html>
     """
 
-# Sửa lại API Endpoint nhận diện dữ liệu chuẩn định dạng JSON từ giao diện gọi xuống
 from pydantic import BaseModel
 class ContentInput(BaseModel):
     caption: str
 
 @app.post("/check")
 def check_content(payload: ContentInput):
-    # Gọi trực tiếp bộ não AI Agent xử lý tại chỗ
     if check_content_direct:
         try:
             result = check_content_direct(payload.caption, None)
@@ -106,4 +102,6 @@ def check_content(payload: ContentInput):
     return {"output": "Trợ lý AI Agent đã xử lý xong bài viết. Kết quả đạt chuẩn quy chuẩn thương hiệu!"}
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8080)
+    # ĐÂY CHÍNH LÀ CHÌA KHÓA: Lấy cổng động do hệ thống Railway tự cấp phát, nếu không thấy thì mới dùng 8080
+    port = int(os.environ.get("PORT", 8080))
+    uvicorn.run(app, host="0.0.0.0", port=port)

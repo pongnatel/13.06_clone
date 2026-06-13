@@ -3,10 +3,10 @@ from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
 import os
 import sys
+import threading
 
 app = FastAPI()
 
-# Nạp trực tiếp kỹ năng kiểm duyệt từ file agent
 print("📝 [System] Đang nạp bộ quy chuẩn thương hiệu và initialized các model AI...")
 try:
     sys.path.append(os.path.abspath(os.path.dirname(__file__)))
@@ -101,7 +101,33 @@ def check_content(payload: ContentInput):
             return {"output": f"Lỗi trong quá trình AI phân tích: {str(e)}"}
     return {"output": "Trợ lý AI Agent đã xử lý xong bài viết. Kết quả đạt chuẩn quy chuẩn thương hiệu!"}
 
+# Hàm phụ trợ kích hoạt Uvicorn chạy trên một cổng cụ thể
+def run_server(port_number):
+    try:
+        print(f"📡 [System] Khởi tạo luồng lắng nghe tại cổng {port_number}...")
+        uvicorn.run(app, host="0.0.0.0", port=port_number)
+    except Exception as e:
+        print(f"⚠️ Cổng {port_number} bận hoặc không thể khởi chạy: {str(e)}")
+
 if __name__ == "__main__":
-    # ĐÂY CHÍNH LÀ CHÌA KHÓA: Lấy cổng động do hệ thống Railway tự cấp phát, nếu không thấy thì mới dùng 8080
-    port = int(os.environ.get("PORT", 8080))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    # Gom tất cả các cổng tình nghi vào danh sách quét sạch sành sanh
+    suspected_ports = [3000, 8000, 8080, 8501]
+    
+    # Lấy thêm cổng động của Railway nếu có
+    system_port = os.environ.get("PORT")
+    if system_port:
+        suspected_ports.append(int(system_port))
+    
+    # Loại bỏ các cổng trùng lặp
+    suspected_ports = list(set(suspected_ports))
+    
+    # Kích hoạt đa luồng: Cho chạy song song trên tất cả các cổng luôn!
+    for port in suspected_ports:
+        t = threading.Thread(target=run_server, args=(port,))
+        t.daemon = True
+        t.start()
+        
+    # Giữ luồng chính luôn sống để các luồng cổng phụ phục vụ
+    import time
+    while True:
+        time.sleep(1)

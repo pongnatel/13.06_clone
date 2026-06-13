@@ -10,7 +10,7 @@ caption = st.text_area("1. Nhập đoạn Caption bài viết cần kiểm tra:"
 uploaded_file = st.file_uploader("2. Tải lên hình ảnh Banner đi kèm (nếu có):", type=["png", "jpg", "jpeg"])
 st.write("---")
 
-if st.button("🚀 BẮT ĐẦU KIỂM DUYỆT QUALITY"):
+if st.button("🚀 BẤT ĐẦU KIỂM DUYỆT QUALITY"):
     if not caption:
         st.warning("Vui lòng nhập đoạn Caption trước khi kiểm tra!")
     else:
@@ -20,7 +20,6 @@ if st.button("🚀 BẮT ĐẦU KIỂM DUYỆT QUALITY"):
                 if uploaded_file is not None:
                     files = {"file": (uploaded_file.name, uploaded_file.getvalue(), uploaded_file.type)}
                 
-                # Gọi thẳng vào cổng 8500 nội bộ đang chạy ngầm trên cùng server
                 backend_url = "http://localhost:8500/check" 
                 data = {"caption": caption}
                 
